@@ -1,0 +1,24 @@
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+# node / vite
+node_modules/
+dist/
+build/
+*.log
+.vite/
+# editors / secrets
+.env
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+# workbench state (attachments, per-project task list)
+.jarvis/
+# agent verification debris (playwright snapshots + screenshots)
+.playwright-mcp/
+v3-*.png
+*-hero*.png

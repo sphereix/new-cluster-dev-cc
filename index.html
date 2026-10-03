@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ClusterCloud UK | Enterprise Cloud Solutions &amp; Hosting</title>
+  <meta name="description" content="Enterprise-grade cloud solutions, container orchestration and managed services. High-performance hosting optimised for modern applications with a 99.9% uptime guarantee.">
+  <meta name="theme-color" content="#0d0a08">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d0a08'/%3E%3Cpath d='M16 3.5 26.5 9.2v13.6L16 28.5 5.5 22.8V9.2z' fill='none' stroke='%23f97316' stroke-width='1.8'/%3E%3Cpath d='M16 10.4 21 13.2v5.6L16 21.6 11 18.8v-5.6z' fill='%23f97316'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="is-loading">
+
+  <div id="top"></div>
+
+  <!-- ---------------------------------------------------------------
+       The fixed 3D stage. index.html owns the canvas element; app.js
+       drives it with raw WebGL (no framework, no build step).
+       --------------------------------------------------------------- -->
+  <div class="stage" aria-hidden="true">
+    <canvas id="scene"></canvas>
+  </div>
+  <div class="stage-vignette" aria-hidden="true"></div>
+  <div class="stage-grain" aria-hidden="true"></div>
+
+  <!-- ---------------------------------------------------------------
+       Intro overlay
+       --------------------------------------------------------------- -->
+  <div class="loader" id="loader">
+    <div class="loader-inner">
+      <svg class="brand-mark" width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="ccmLoader" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fdba74"/>
+            <stop offset="100%" stop-color="#f97316"/>
+          </linearGradient>
+        </defs>
+        <path d="M16 3.5 26.5 9.2v13.6L16 28.5 5.5 22.8V9.2z" stroke="url(#ccmLoader)" stroke-width="1.4"/>
+        <path d="M16 10.4 21 13.2v5.6L16 21.6 11 18.8v-5.6z" fill="url(#ccmLoader)" opacity="0.9"/>
+        <path d="M16 3.5v6.9M26.5 9.2 21 13.2M5.5 9.2 11 13.2M16 21.6v6.9" stroke="url(#ccmLoader)" stroke-width="1" opacity="0.55"/>
+      </svg>
+      <span class="loader-label">Initialising cluster</span>
+      <div class="loader-bar"><i></i></div>
+    </div>
+  </div>
+
+  <!-- ---------------------------------------------------------------
+       Navigation. The same sections as before, plus the block-cluster
+       groups the source project had.
+       --------------------------------------------------------------- -->
+  <header class="nav" id="nav">
+    <div class="shell nav-inner">
+      <a class="brand" href="#top" aria-label="ClusterCloud home">
+        <svg class="brand-mark" width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="ccm" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#fdba74"/>
+              <stop offset="100%" stop-color="#f97316"/>
+            </linearGradient>
+          </defs>
+          <path d="M16 3.5 26.5 9.2v13.6L16 28.5 5.5 22.8V9.2z" stroke="url(#ccm)" stroke-width="1.4"/>
+          <path d="M16 10.4 21 13.2v5.6L16 21.6 11 18.8v-5.6z" fill="url(#ccm)" opacity="0.9"/>
+          <path d="M16 3.5v6.9M26.5 9.2 21 13.2M5.5 9.2 11 13.2M16 21.6v6.9" stroke="url(#ccm)" stroke-width="1" opacity="0.55"/>
+        </svg>
+        <span class="brand-name">ClusterCloud<em>.uk</em></span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#what">Platform</a>
+        <a href="#services">Services</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#why">Why ClusterCloud</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <a class="btn btn-primary btn-sm nav-cta" href="#contact">
+        Book a meeting
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9.4M8.6 3.8 12.9 8l-4.3 4.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+
+      <button class="nav-burger" id="navBurger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <div class="nav-menu" id="navMenu">
+      <nav class="shell nav-menu-inner" aria-label="Mobile">
+        <a href="#what">Platform</a>
+        <a href="#services">Services</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#why">Why ClusterCloud</a>
+        <a href="#contact">Contact</a>
+        <a class="btn btn-primary" href="#contact">Book a meeting
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9.4M8.6 3.8 12.9 8l-4.3 4.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </nav>
+    </div>
+    <div class="nav-rail" id="navRail" aria-hidden="true"></div>
+  </header>
+
+  <!-- scroll progress rail -->
+  <nav class="progress" id="progress" aria-label="Section progress">
+    <button type="button" data-target="hero"><span>hero</span><span class="seg"></span></button>
+    <button type="button" data-target="what"><span>what</span><span class="seg"></span></button>
+    <button type="button" data-target="infrastructure"><span>infrastructure</span><span class="seg"></span></button>
+    <button type="button" data-target="migration"><span>migration</span><span class="seg"></span></button>
+    <button type="button" data-target="monitoring"><span>monitoring</span><span class="seg"></span></button>
+    <button type="button" data-target="services"><span>services</span><span class="seg"></span></button>
+    <button type="button" data-target="connectivity"><span>connectivity</span><span class="seg"></span></button>
+    <button type="button" data-target="resilience"><span>resilience</span><span class="seg"></span></button>
+    <button type="button" data-target="why"><span>why</span><span class="seg"></span></button>
+    <button type="button" data-target="contact"><span>contact</span><span class="seg"></span></button>
+  </nav>
+
+  <main class="content">
+
+    <!-- ================================================== 01 — hero -->
+    <section class="hero" id="hero">
+      <div class="shell">
+        <div class="hero-copy">
+          <div class="reveal" style="animation-delay:.15s">
+            <div class="eyebrow"><span class="tick">&#9679;</span><span>UK cloud infrastructure &middot; managed end to end</span></div>
+          </div>
+
+          <h1 class="reveal" style="animation-delay:.28s">
+            <span class="line">Cloud infrastructure.</span>
+            <span class="line accent">Built around your business.</span>
+          </h1>
+
+          <p class="hero-sub reveal" style="animation-delay:.42s">
+            We design, migrate and run the platforms your business depends on &mdash; and stay on the line when it matters.
+          </p>
+
+          <div class="hero-dock">
+            <div class="hero-actions reveal" style="animation-delay:.56s">
+              <a class="btn btn-primary" href="#contact">Book a meeting
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9.4M8.6 3.8 12.9 8l-4.3 4.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+              <a class="btn btn-ghost" href="#what">See what we do
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9.4M8.6 3.8 12.9 8l-4.3 4.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+            </div>
+
+            <div class="telemetry reveal" style="animation-delay:.7s">
+              <div class="cell"><div class="k">Support</div><div class="v"><span class="dot"></span>24/7</div></div>
+              <div class="cell"><div class="k">Uptime target</div><div class="v">99.9%</div></div>
+              <div class="cell"><div class="k">Stack</div><div class="v">Kubernetes, Linux, CDN</div></div>
+              <div class="cell"><div class="k">Based</div><div class="v">Handforth, UK</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================== 02 — what -->
+    <section class="section-pad" id="what">
+      <div class="shell">
+        <div class="family-intro">
+          <div class="section-head reveal-scroll">
+            <div class="eyebrow"><span>Part of The Cluster Group</span></div>
+            <h2>Two companies. One family.</h2>
+            <p class="lede">ClusterCloud.uk and ClusterConnect.co.uk are sister companies in The Cluster Group &mdash; so the platform your business runs on and the IT your people use every day are looked after by the same family.</p>
+          </div>
+          <div class="cube-slot" id="familyCubeSlot" aria-hidden="true"></div>
+        </div>
+
+        <div class="family-grid">
+          <article class="family is-current reveal-scroll">
+            <div class="family-top">
+              <span class="family-domain">clustercloud.uk</span>
+              <span class="family-tag">You are here</span>
+            </div>
+            <h3>Cloud &amp; infrastructure</h3>
+            <p>Cloud platforms, Kubernetes, high-performance hosting, migration and managed infrastructure &mdash; designed, built and run for you.</p>
+          </article>
+
+          <article class="family reveal-scroll">
+            <div class="family-top">
+              <span class="family-domain">clusterconnect.co.uk</span>
+            </div>
+            <h3>IT &amp; telecoms</h3>
+            <p>IT and telecoms services for businesses &mdash; the everyday technology and communications that keep your teams connected.</p>
+            <a class="family-link" href="https://clusterconnect.co.uk" target="_blank" rel="noopener">
+              Visit ClusterConnect
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9.4M8.6 3.8 12.9 8l-4.3 4.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </article>
+        </div>
+
+        <div class="section-head family-follow reveal-scroll">
+          <div class="eyebrow"><span>What ClusterCloud does</span></div>
+          <h2>One team for the whole platform.</h2>
+          <p class="lede">From the first migration to the call at 3am, we run the cloud layer so your team can run the business.</p>
+        </div>
+
+        <div class="cap-grid">
+          <article class="cap reveal-scroll">
+            <div class="cap-top">
+              <span class="num">01</span>
+              <svg class="glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3.4" width="16" height="17.2" rx="1.4" stroke="currentColor" stroke-width="1.1"/><path d="M4 9.2h16M4 14.6h16" stroke="currentColor" stroke-width="1.1"/><circle cx="17.4" cy="6.3" r=".9" fill="currentColor"/><circle cx="17.4" cy="12" r=".9" fill="currentColor" opacity=".6"/></svg>
+            </div>
+            <h3>Cloud infrastructure</h3>
+            <p>Auto-scaling compute, multi-region deployment and pay-as-you-go pricing, sized to what you actually use.</p>
+          </article>
+
+          <article class="cap reveal-scroll">
+            <div class="cap-top">
+              <span class="num">02</span>
+              <svg class="glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.8 21.2 7.6 12 12.4 2.8 7.6z" stroke="currentColor" stroke-width="1.1"/><path d="M2.8 12.2 12 17l9.2-4.8M2.8 16.6 12 21.4l9.2-4.8" stroke="currentColor" stroke-width="1.1"/></svg>
+            </div>
+            <h3>Container orchestration</h3>
+            <p>Enterprise-grade Kubernetes: automated deployment, load balancing, self-healing workloads, zero-downtime releases.</p>
+          </article>
+
+          <article class="cap reveal-scroll">
+            <div class="cap-top">
+              <span class="num">03</span>
+              <svg class="glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.5 12.5h4l2.3-6 3.4 12 2.4-8 1.8 4h5.1" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h3>Monitoring &amp; support</h3>
+            <p>Round-the-clock monitoring and a named engineer who knows your environment. Not a ticket queue.</p>
+          </article>
+
+          <article class="cap reveal-scroll">
+            <div class="cap-top">
+              <span class="num">04</span>
+              <svg class="glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.1"/><path d="M2.8 12h18.4M12 2.8c2.6 2.7 2.6 15.4 0 18.4-2.6-3-2.6-15.7 0-18.4z" stroke="currentColor" stroke-width="1.1"/></svg>
+            </div>
+            <h3>Managed services</h3>
+            <p>Proactive maintenance, security patching, backup and disaster recovery, handled for you.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================= 03 — managed infrastructure -->
+    <section class="section-pad" id="infrastructure">
+      <div class="shell">
+        <div class="index-badge reveal-scroll"><span><span class="n">01</span> / Managed infrastructure</span><span>03</span></div>
+        <div class="glass panel reveal-scroll">
+          <div class="panel-copy">
+            <h2 class="h2-sm">Infrastructure that stays up.</h2>
+            <p class="lede">We build on Google Cloud and Microsoft Azure with certified architects &mdash; then keep the boring parts running: patching, scaling, capacity, cost.</p>
+          </div>
+          <ul class="spec-list">
+            <li><span class="idx">01</span><span><b>Auto-scaling compute</b> &mdash; resources follow demand, not a spreadsheet.</span></li>
+            <li><span class="idx">02</span><span><b>Multi-region deployment</b> &mdash; put workloads near the people using them.</span></li>
+            <li><span class="idx">03</span><span><b>Pay-as-you-go</b> &mdash; pay for what is provisioned and running.</span></li>
+            <li><span class="idx">04</span><span><b>Linux, end to end</b> &mdash; deep experience hardening and tuning server environments.</span></li>
+            <li><span class="idx">05</span><span><b>Zero-downtime releases</b> &mdash; rollouts that never take the platform offline.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================ 04 — migration -->
+    <section class="section-pad" id="migration">
+      <div class="shell">
+        <div class="index-badge reveal-scroll"><span><span class="n">02</span> / Cloud migration</span><span>04</span></div>
+        <div class="glass panel reveal-scroll">
+          <div class="panel-copy">
+            <h2 class="h2-sm">Move without the drama.</h2>
+            <p class="lede">We plan the move, test it on real traffic, then cut over when it is safe. Most migrations are invisible to your customers.</p>
+          </div>
+          <ul class="spec-list">
+            <li><span class="idx">01</span><span><b>Assessment first</b> &mdash; what you are actually running, and what it costs to keep.</span></li>
+            <li><span class="idx">02</span><span><b>Rehearsed cutovers</b> &mdash; migrations tested end to end before anything goes live.</span></li>
+            <li><span class="idx">03</span><span><b>Replatform or rebuild</b> &mdash; containerise what is worth it, leave what is not.</span></li>
+            <li><span class="idx">04</span><span><b>Data movement, verified</b> &mdash; checksums, reconciliation and rollback plans.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================== 05 — monitoring -->
+    <section class="section-pad" id="monitoring">
+      <div class="shell">
+        <div class="index-badge reveal-scroll"><span><span class="n">03</span> / Monitoring &amp; support</span><span>05</span></div>
+        <div class="glass panel reveal-scroll">
+          <div class="panel-copy">
+            <h2 class="h2-sm">Eyes on it, always.</h2>
+            <p class="lede">24/7 monitoring with real humans behind it. We usually know something is wrong before you do.</p>
+          </div>
+          <ul class="spec-list">
+            <li><span class="idx">01</span><span><b>24/7 infrastructure monitoring</b> &mdash; every environment watched, continuously.</span></li>
+            <li><span class="idx">02</span><span><b>Proactive maintenance</b> &mdash; patching and tuning ahead of the failure, not after.</span></li>
+            <li><span class="idx">03</span><span><b>Security updates</b> &mdash; CVE tracking and controlled patch windows.</span></li>
+            <li><span class="idx">04</span><span><b>Support by phone</b> &mdash; 07756 632032, and an email that reaches an engineer.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================== 06 — enterprise-ready services -->
+    <section class="section-pad" id="services">
+      <div class="shell">
+        <div class="svc-intro">
+          <div class="section-head reveal-scroll">
+            <div class="eyebrow"><span>Enterprise-ready cloud services</span></div>
+            <h2>Powerful infrastructure, built for modern applications.</h2>
+            <p class="lede">Container orchestration, high-performance hosting, cloud infrastructure and fully managed services &mdash; run by the same small UK team.</p>
+          </div>
+          <div class="cube-slot" id="svcCubeSlot" aria-hidden="true"></div>
+        </div>
+
+        <div class="svc-grid">
+          <article class="svc reveal-scroll">
+            <div class="svc-top">
+              <svg class="glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.8 21.2 7.6 12 12.4 2.8 7.6z" stroke="currentColor" stroke-width="1.1"/><path d="M2.8 12.2 12 17l9.2-4.8M2.8 16.6 12 21.4l9.2-4.8" stroke="currentColor" stroke-width="1.1"/></svg>
+              <span class="num">01</span>
+            </div>
+            <h3>Container orchestration</h3>
+            <p class="svc-lede">Enterprise-grade container orchestration powered by Kubernetes.</p>
+            <ul class="spec-list tight">
+              <li>Automated container deployment</li>
+              <li>Load balancing &amp; scaling</li>
+              <li>Self-healing infrastructure</li>
+              <li>Zero-downtime deployments</li>
+            </ul>
+          </article>
+
+          <article class="svc reveal-scroll">
+            <div class="svc-top">
+              <svg class="glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.1"/><path d="M2.8 12h18.4M12 2.8c2.6 2.7 2.6 15.4 0 18.4-2.6-3-2.6-15.7 0-18.4z" stroke="currentColor" stroke-width="1.1"/></svg>
+              <span class="num">02</span>
+            </div>
+            <h3>High-performance hosting</h3>
+            <p class="svc-lede">Lightning-fast web hosting optimised for performance.</p>
+            <ul class="spec-list tight">
+              <li>Global CDN distribution</li>
+              <li>SSD-powered infrastructure</li>
+              <li>Automatic SSL certificates</li>
+              <li>99.9% uptime guarantee</li>
+            </ul>
+          </article>
+
+          <article class="svc reveal-scroll">
+            <div class="svc-top">
+              <svg class="glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3.4" width="16" height="17.2" rx="1.4" stroke="currentColor" stroke-width="1.1"/><path d="M4 9.2h16M4 14.6h16" stroke="currentColor" stroke-width="1.1"/><circle cx="17.4" cy="6.3" r=".9" fill="currentColor"/></svg>
+              <span class="num">03</span>
+            </div>
+            <h3>Cloud infrastructure</h3>
+            <p class="svc-lede">Scalable cloud infrastructure built for growth.</p>
+            <ul class="spec-list tight">
+              <li>Auto-scaling resources</li>
+              <li>Pay-as-you-go pricing</li>
+              <li>Multi-region deployment</li>
+              <li>24/7 infrastructure monitoring</li>
+            </ul>
+          </article>
+
+          <article class="svc reveal-scroll">
+            <div class="svc-top">
+              <svg class="glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.6 20 6v6.1c0 4.5-3.2 8.2-8 9.3-4.8-1.1-8-4.8-8-9.3V6z" stroke="currentColor" stroke-width="1.1"/><path d="M8.7 12.1l2.4 2.4 4.3-4.6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+              <span class="num">04</span>
+            </div>
+            <h3>Managed services</h3>
+            <p class="svc-lede">Fully managed cloud solutions for your business.</p>
+            <ul class="spec-list tight">
+              <li>Proactive maintenance</li>
+              <li>Security updates &amp; patches</li>
+              <li>Backup &amp; disaster recovery</li>
+              <li>Expert technical support</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================== 05b — connectivity (edge) -->
+    <section class="section-pad" id="connectivity">
+      <div class="shell">
+        <div class="index-badge reveal-scroll"><span><span class="n">04</span> / Connectivity</span><span>06</span></div>
+        <div class="glass panel reveal-scroll">
+          <div class="panel-copy">
+            <h2 class="h2-sm">Fast where your users are.</h2>
+            <p class="lede">Content delivered from the edge, TLS handled automatically, and networks designed so latency never becomes the complaint.</p>
+          </div>
+          <ul class="spec-list">
+            <li><span class="idx">01</span><span><b>Global CDN distribution</b> &mdash; assets served close to whoever is asking.</span></li>
+            <li><span class="idx">02</span><span><b>Automatic SSL certificates</b> &mdash; issued, renewed and rotated for you.</span></li>
+            <li><span class="idx">03</span><span><b>Load balancing</b> &mdash; traffic spread across healthy instances.</span></li>
+            <li><span class="idx">04</span><span><b>Private networking</b> &mdash; services talk to each other, not to the internet.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== 07 — resilience -->
+    <section class="section-pad" id="resilience">
+      <div class="shell">
+        <div class="index-badge reveal-scroll"><span><span class="n">05</span> / Resilience &amp; backups</span><span>07</span></div>
+        <div class="glass panel reveal-scroll">
+          <div class="panel-copy">
+            <h2 class="h2-sm">Designed to survive Tuesday.</h2>
+            <p class="lede">Redundancy is not a feature you bolt on later. We run mirrored workloads, tested backups and a recovery plan with your name on it.</p>
+          </div>
+          <ul class="spec-list">
+            <li><span class="idx">01</span><span><b>Backup &amp; disaster recovery</b> &mdash; scheduled, encrypted and restored in anger, not just theory.</span></li>
+            <li><span class="idx">02</span><span><b>Self-healing infrastructure</b> &mdash; failed instances replaced automatically.</span></li>
+            <li><span class="idx">03</span><span><b>Redundant deployments</b> &mdash; no single node is load-bearing.</span></li>
+            <li><span class="idx">04</span><span><b>99.9% uptime guarantee</b> &mdash; measured, reported, and ours to answer for.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================= 08 — pricing -->
+    <section class="section-pad" id="pricing">
+      <div class="shell">
+        <div class="section-head center reveal-scroll">
+          <h2>Three ways to run it.</h2>
+          <p class="lede">Every engagement starts with a free assessment. You pay for what is provisioned &mdash; and you can leave on 30 days' notice.</p>
+        </div>
+
+        <div class="price-grid">
+          <article class="price reveal-scroll">
+            <div class="price-head">
+              <h3>Managed Linux</h3>
+              <div class="amount"><span class="cur">&pound;</span>149<span class="per">/ server / month</span></div>
+              <p>For teams with an estate but no time to look after it.</p>
+            </div>
+            <ul class="spec-list tight">
+              <li>Patching, hardening &amp; tuning</li>
+              <li>24/7 monitoring and alerting</li>
+              <li>Nightly backups, tested quarterly</li>
+              <li>Named engineer, phone support</li>
+            </ul>
+            <a class="btn btn-ghost" href="#contact">Book an assessment
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9.4M8.6 3.8 12.9 8l-4.3 4.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </article>
+
+          <article class="price featured reveal-scroll">
+            <span class="ribbon">Most requested</span>
+            <div class="price-head">
+              <h3>Kubernetes platform</h3>
+              <div class="amount"><span class="cur">&pound;</span>2,400<span class="per">/ month</span></div>
+              <p>For production workloads that must stay up.</p>
+            </div>
+            <ul class="spec-list tight">
+              <li>Cluster design, build &amp; run</li>
+              <li>Zero-downtime release pipeline</li>
+              <li>Multi-region &amp; disaster recovery</li>
+              <li>Cost optimisation and reporting</li>
+              <li>24/7 support, 99.9% target</li>
+            </ul>
+            <a class="btn btn-primary" href="#contact">Book a meeting
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9.4M8.6 3.8 12.9 8l-4.3 4.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </article>
+
+          <article class="price reveal-scroll">
+            <div class="price-head">
+              <h3>Cloud migration</h3>
+              <div class="amount">Fixed fee</div>
+              <p>Scoped after the assessment. No discovery theatre.</p>
+            </div>
+            <ul class="spec-list tight">
+              <li>Estate assessment &amp; cost model</li>
+              <li>Rehearsed, reversible cutover</li>
+              <li>Data movement, checksum verified</li>
+              <li>Runbook and handover</li>
+            </ul>
+            <a class="btn btn-ghost" href="#contact">Book an assessment
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9.4M8.6 3.8 12.9 8l-4.3 4.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <p class="fine">Prices exclude VAT.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================== 09 — why -->
+    <section class="section-pad" id="why">
+      <div class="shell">
+        <div class="section-head reveal-scroll">
+          <div class="eyebrow"><span>Why ClusterCloud</span></div>
+          <h2>Certified, fast, and reachable.</h2>
+          <p class="lede">A small UK team of cloud architects &mdash; the opposite of a support portal.</p>
+        </div>
+
+        <div class="proof">
+          <div class="item reveal-scroll">
+            <svg class="glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.6 20 6v6.1c0 4.5-3.2 8.2-8 9.3-4.8-1.1-8-4.8-8-9.3V6z" stroke="currentColor" stroke-width="1.1"/><path d="M8.7 12.1l2.4 2.4 4.3-4.6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <h3>GCP and Microsoft certified</h3>
+            <p>Professional cloud architects with expertise in infrastructure and services.</p>
+          </div>
+          <div class="item reveal-scroll">
+            <svg class="glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13.5 2.5 5 13h5l-1 8.5L18 10.5h-5z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>
+            <h3>Lightning fast</h3>
+            <p>Optimised infrastructure ensuring minimal latency and maximum performance.</p>
+          </div>
+          <div class="item reveal-scroll">
+            <svg class="glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.1"/><path d="M12 6.6V12l3.6 2.2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <h3>24/7 support</h3>
+            <p>Round-the-clock expert support to keep your systems running smoothly.</p>
+          </div>
+          <div class="item reveal-scroll">
+            <svg class="glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="1.6" stroke="currentColor" stroke-width="1.1"/><path d="M8 19.5h8M12 16.5v3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M6.6 13l2.6-3.2 2.2 2.2 2.4-3.4 2.6 4.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <h3>Linux experts</h3>
+            <p>Extensive experience managing and optimising Linux server environments.</p>
+          </div>
+        </div>
+
+        <div class="quote-grid">
+          <figure class="quote reveal-scroll">
+            <blockquote>&ldquo;clustercloud.uk has transformed how we manage and update our web store. The performance improvements after moving to ClusterCloud were immediate and significant.&rdquo;</blockquote>
+            <figcaption class="who"><b>Liam Hulmes</b><span>DeadGoodWood</span></figcaption>
+          </figure>
+          <figure class="quote reveal-scroll">
+            <blockquote>&ldquo;The support team is exceptional. They&rsquo;ve helped us optimise our infrastructure on a per call basis and reduce costs whilst providing high quality development services on demand.&rdquo;</blockquote>
+            <figcaption class="who"><b>Daniel Berry</b><span>SimplySteels</span></figcaption>
+          </figure>
+          <figure class="quote reveal-scroll">
+            <blockquote>&ldquo;Involving clustercloud.uk in our deployment process was a fantastic decision. Thanks to their hard work, getting web applications online is now seamless and faster than ever.&rdquo;</blockquote>
+            <figcaption class="who"><b>Florin Padure</b><span>Contrac IT</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================== 10 — final CTA -->
+    <section class="final">
+      <div class="shell">
+        <div class="reveal-scroll">
+          <h2>Infrastructure without <span class="accent">the complexity.</span></h2>
+          <p>Tell us what you are running. We will tell you what it should cost, and what it will take to get there.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#contact">Book a meeting
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9.4M8.6 3.8 12.9 8l-4.3 4.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a class="btn btn-ghost" href="tel:+447756632032">Call 07756 632032
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9.4M8.6 3.8 12.9 8l-4.3 4.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================= 11 — contact -->
+    <section class="section-pad" id="contact">
+      <div class="shell">
+        <div class="index-badge reveal-scroll"><span><span class="n">05</span> / Contact</span><span>Handforth, UK</span></div>
+
+        <div class="contact-grid">
+          <div>
+            <div class="reveal-scroll">
+              <div class="eyebrow"><span>Get in touch</span></div>
+              <h2 class="h2-sm" style="margin-top:22px">Tell us what you run.</h2>
+              <p class="lede">No discovery deck. A conversation with the architect who would actually do the work.</p>
+            </div>
+
+            <div class="contact-rows">
+              <a href="tel:+447756632032"><span class="lbl">Phone</span><span class="val">07756 632032</span></a>
+              <a href="mailto:info@clustercloud.uk"><span class="lbl">Email</span><span class="val">info@clustercloud.uk</span></a>
+              <div class="row"><span class="lbl">Location</span><span class="val">Handforth, United Kingdom</span></div>
+            </div>
+          </div>
+
+          <div class="reveal-scroll">
+            <form class="glass contact-form" id="contactForm" novalidate>
+              <div class="field">
+                <label for="name">Name</label>
+                <input id="name" name="name" placeholder="Your name" autocomplete="name" required>
+              </div>
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="your@email.com" autocomplete="email" required>
+              </div>
+              <div class="field">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" placeholder="What are you running, and what should it do better?" required></textarea>
+              </div>
+              <button class="btn btn-primary submit" type="submit">
+                Send message
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9.4M8.6 3.8 12.9 8l-4.3 4.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
+              <p class="form-note">Prefer to talk? Call 07756 632032 &mdash; a person answers.</p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================== 12 — footer -->
+    <footer class="footer">
+      <div class="shell">
+        <div class="footer-top">
+          <div class="footer-brand">
+            <div class="brand">
+              <svg class="brand-mark" width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <path d="M16 3.5 26.5 9.2v13.6L16 28.5 5.5 22.8V9.2z" stroke="#f97316" stroke-width="1.4"/>
+                <path d="M16 10.4 21 13.2v5.6L16 21.6 11 18.8v-5.6z" fill="#f97316" opacity="0.9"/>
+              </svg>
+              <span class="brand-name">ClusterCloud<em>.uk</em></span>
+            </div>
+            <p>UK cloud infrastructure, managed end to end. Kubernetes, Linux and cloud platforms run by people you can phone.</p>
+          </div>
+
+          <div>
+            <h4>Platform</h4>
+            <ul>
+              <li><a href="#what">What we do</a></li>
+              <li><a href="#services">Services</a></li>
+              <li><a href="#pricing">Pricing</a></li>
+              <li><a href="#why">Why ClusterCloud</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4>Services</h4>
+            <ul>
+              <li><a href="#services">Container orchestration</a></li>
+              <li><a href="#services">Cloud migration</a></li>
+              <li><a href="#monitoring">Monitoring &amp; support</a></li>
+              <li><a href="#connectivity">Connectivity</a></li>
+              <li><a href="#services">High-performance hosting</a></li>
+              <li><a href="#resilience">Resilience &amp; backups</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4>Contact</h4>
+            <ul>
+              <li><a href="mailto:info@clustercloud.uk">info@clustercloud.uk</a></li>
+              <li><a href="tel:+447756632032">07756 632032</a></li>
+              <li>Handforth, United Kingdom</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <span>&copy; <span id="year">2026</span> clustercloud.uk &mdash; all rights reserved</span>
+          <span>Cloud infrastructure &middot; Kubernetes &middot; Linux</span>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
