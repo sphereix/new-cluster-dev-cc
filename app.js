@@ -2103,8 +2103,20 @@ function initPage() {
     /* Subtle depth: the copy drifts a few pixels against the scroll while a
        block is still crossing the frame, then settles — the section change
        reads as a camera move rather than a hard cut. Cheap: one transform,
-       no layout, and it stops once the element is well inside. */
-    const parallaxEls = Array.prototype.filter.call(revealEls, (el) => el.offsetHeight > 0)
+       no layout, and it stops once the element is well inside.
+
+       Depth is applied to wide copy blocks only (section heads, panels,
+       badges). Grid cards are excluded: a card that shifted on its own axis
+       while the page scrolled read as a wobble, so once a card has revealed
+       it must sit perfectly still. */
+    const PARALLAX_SEL = '.section-head, .glass, .index-badge'
+    const parallaxEls = Array.prototype.filter.call(revealEls, (el) => {
+      if (el.offsetHeight <= 0) return false
+      if (el.matches('article, figure')) return false
+      if (el.closest('.cap-grid, .svc-grid, .price-grid, .family-grid, .proof, .quote-grid'))
+        return false
+      return el.matches(PARALLAX_SEL)
+    })
     const PARALLAX = 26
     scrollFx.push((sy, vh) => {
       for (let i = 0; i < parallaxEls.length; i++) {

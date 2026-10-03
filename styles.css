@@ -1536,8 +1536,28 @@ section {
 .reveal-scroll.is-in,
 [data-reveal-child].is-in {
   opacity: 1;
-  transform: translate3d(0, var(--drift, 0px), 0) scale(1);
   filter: blur(0);
+}
+
+/* Parallax depth rides only on wide copy blocks (section heads, panels,
+   badges) — the same set the JS drift loop targets. Cards and grid children
+   are deliberately excluded: a card that translate3d'd on its own axis while
+   the page scrolled read as a wobble, so revealed cards rest at a flat 1:1
+   scale with no drift term at all. */
+.section-head.is-in,
+.glass.is-in,
+.index-badge.is-in {
+  transform: translate3d(0, var(--drift, 0px), 0) scale(1);
+}
+
+.cap.is-in,
+.svc.is-in,
+.price.is-in,
+.family.is-in,
+.quote.is-in,
+.item.is-in,
+.proof.is-in {
+  transform: none;
 }
 
 /* keep the compositor busy only for the elements actually moving */
