@@ -1971,18 +1971,24 @@ function initPage() {
   }
 
   let queued = false
+  /* Scroll-linked effects register here rather than each attaching its own
+     scroll listener, so every frame is computed once, in one rAF, off one
+     read of scrollY. */
+  const scrollFx = []
   const onScroll = () => {
     if (queued) return
     queued = true
     requestAnimationFrame(() => {
       queued = false
       const doc = document.documentElement
-      const max = Math.max(1, doc.scrollHeight - window.innerHeight)
-      const p = clamp(window.scrollY / max, 0, 1)
-      if (nav) nav.classList.toggle('is-pinned', window.scrollY > 30)
+      const sy = window.scrollY
+      const vh = window.innerHeight
+      const max = Math.max(1, doc.scrollHeight - vh)
+      const p = clamp(sy / max, 0, 1)
+      if (nav) nav.classList.toggle('is-pinned', sy > 30)
       if (rail) rail.style.transform = 'scaleX(' + p + ')'
 
-      const y = window.scrollY + window.innerHeight * 0.5
+      const y = sy + vh * 0.5
       let active = 0
       railButtons.forEach((b, i) => {
         const el = document.getElementById(b.dataset.target)
@@ -1996,6 +2002,8 @@ function initPage() {
         if (y >= top) active = i
       })
       railButtons.forEach((b, i) => b.classList.toggle('is-active', i === active))
+
+      for (let i = 0; i < scrollFx.length; i++) scrollFx[i](sy, vh, p)
     })
   }
   window.addEventListener('scroll', onScroll, { passive: true })
@@ -2009,22 +2017,108 @@ function initPage() {
     })
   })
 
-  /* ---------- scroll reveals ---------- */
+  /* ---------- scroll reveals ----------
+     A `.reveal-scroll` block eases up as it enters the frame; its children
+     (cards, rows, quotes) then follow as a staggered wave rather than all
+     snapping in together. The observer only queues work — the classes are
+     applied inside one rAF so a grid of cards costs a single style pass,
+     and `will-change` is dropped on transitionend so idle sections stay
+     on the cheap texture path while scrolling. */
+  const motionOK = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const revealEls = Array.prototype.slice.call(document.querySelectorAll('.reveal-scroll'))
-  if ('IntersectionObserver' in window) {
+
+  /* Stagger groups. In this markup a grid holds sibling `.reveal-scroll`
+     cards (each card is its own reveal block), so the wave is produced by
+     delaying each card inside its grid by its index. A panel that instead
+     owns inner rows (its spec list, its contact rows) staggers those rows. */
+  const GRID_SEL =
+    '.cap-grid, .svc-grid, .price-grid, .family-grid, .proof, .quote-grid, .contact-rows'
+  const ROW_SEL = '.spec-list li, .contact-rows a, .contact-rows .row'
+
+  revealEls.forEach((parent) => {
+    const rows = parent.querySelectorAll(ROW_SEL)
+    for (let i = 0; i < rows.length; i++) {
+      rows[i].setAttribute('data-reveal-child', '')
+      rows[i].style.setProperty('--reveal-delay', 'calc(' + i + ' * var(--reveal-stagger))')
+    }
+  })
+
+  /* Give each card inside a multi-card grid its own index delay. */
+  Array.prototype.forEach.call(document.querySelectorAll(GRID_SEL), (grid) => {
+    const cards = Array.prototype.filter.call(grid.children, (el) =>
+      el.classList.contains('reveal-scroll')
+    )
+    if (cards.length < 2) return
+    cards.forEach((el, i) => {
+      el.style.setProperty('--reveal-delay', 'calc(' + i + ' * var(--reveal-stagger))')
+    })
+  })
+
+  function release(el) {
+    if (el.classList.contains('is-in')) return
+    el.classList.add('is-in')
+    const kids = el.hasAttribute('data-reveal-child') ? [] : el.querySelectorAll('[data-reveal-child]')
+    for (let i = 0; i < kids.length; i++) kids[i].classList.add('is-in')
+  }
+
+  function dropWillChange(el) {
+    el.style.willChange = 'auto'
+  }
+  document.addEventListener(
+    'transitionend',
+    (e) => {
+      const el = e.target
+      if (el.nodeType !== 1 || !el.classList.contains('is-in')) return
+      if (e.propertyName === 'transform') dropWillChange(el)
+    },
+    { passive: true }
+  )
+
+  if (!motionOK) {
+    revealEls.forEach(release)
+    document.querySelectorAll('[data-reveal-child]').forEach((el) => el.classList.add('is-in'))
+  } else if ('IntersectionObserver' in window) {
+    let flushQueued = false
+    const pending = []
+    const flush = () => {
+      flushQueued = false
+      pending.splice(0).forEach(release)
+    }
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return
-          entry.target.classList.add('is-in')
+          pending.push(entry.target)
           io.unobserve(entry.target)
         })
+        if (pending.length && !flushQueued) {
+          flushQueued = true
+          requestAnimationFrame(flush)
+        }
       },
-      { threshold: 0.18, rootMargin: '0px 0px -12% 0px' }
+      { threshold: 0.12, rootMargin: '0px 0px -10% 0px' }
     )
     revealEls.forEach((el) => io.observe(el))
+
+    /* Subtle depth: the copy drifts a few pixels against the scroll while a
+       block is still crossing the frame, then settles — the section change
+       reads as a camera move rather than a hard cut. Cheap: one transform,
+       no layout, and it stops once the element is well inside. */
+    const parallaxEls = Array.prototype.filter.call(revealEls, (el) => el.offsetHeight > 0)
+    const PARALLAX = 26
+    scrollFx.push((sy, vh) => {
+      for (let i = 0; i < parallaxEls.length; i++) {
+        const el = parallaxEls[i]
+        if (!el.classList.contains('is-in')) continue
+        const r = el.getBoundingClientRect()
+        if (r.bottom < -vh * 0.5 || r.top > vh * 1.5) continue
+        const c = (r.top + r.height * 0.5 - vh * 0.5) / vh
+        const y = clamp(c, -1, 1) * PARALLAX
+        el.style.setProperty('--drift', y.toFixed(2) + 'px')
+      }
+    })
   } else {
-    revealEls.forEach((el) => el.classList.add('is-in'))
+    revealEls.forEach(release)
   }
 
   /* ---------- contact form ---------- */

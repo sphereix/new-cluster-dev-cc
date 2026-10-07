@@ -51,6 +51,12 @@
   /* motion */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  /* slow-in / slow-out with a lighter tail — used for scroll-section reveals
+     so a section eases in as it enters the frame instead of arriving flat */
+  --ease-reveal: cubic-bezier(0.16, 0.84, 0.28, 1);
+  --reveal-dur: 1.15s;
+  --reveal-shift: 30px;
+  --reveal-stagger: 90ms;
 
   /* type scale — fluid */
   --fs-hero: clamp(2.6rem, 5.2vw, 5.1rem);
@@ -1507,19 +1513,49 @@ section {
   background: var(--orange);
 }
 
-/* ---------- scroll reveals (JS driven) ---------- */
+/* ---------- scroll reveals (JS driven) ----------
+   Each section eases up as it enters the frame. A section's own children
+   (cards, rows, figures) are staggered from the parent via --i so a grid
+   lands as a wave rather than all at once. Elements are promoted to their
+   own layer only while animating; compositing is dropped the moment the
+   transition lands, so idle sections cost nothing to scroll past. */
 
-.reveal-scroll {
+.reveal-scroll,
+[data-reveal-child] {
   opacity: 0;
-  transform: translateY(22px);
-  transition: opacity 0.95s var(--ease), transform 0.95s var(--ease);
-  will-change: transform, opacity;
+  transform: translate3d(0, var(--reveal-shift), 0) scale(0.985);
+  filter: blur(6px);
+  transition:
+    opacity var(--reveal-dur) var(--ease-reveal),
+    transform var(--reveal-dur) var(--ease-reveal),
+    filter var(--reveal-dur) var(--ease-reveal);
+  transition-delay: var(--reveal-delay, 0ms);
+  backface-visibility: hidden;
 }
 
-.reveal-scroll.is-in {
+.reveal-scroll.is-in,
+[data-reveal-child].is-in {
   opacity: 1;
-  transform: none;
-  will-change: auto;
+  transform: translate3d(0, var(--drift, 0px), 0) scale(1);
+  filter: blur(0);
+}
+
+/* keep the compositor busy only for the elements actually moving */
+.reveal-scroll:not(.is-in),
+[data-reveal-child]:not(.is-in) {
+  will-change: opacity, transform, filter;
+}
+
+/* a child that has not yet been released stays parked */
+[data-reveal-child] {
+  --reveal-delay: 0ms;
+}
+
+.reveal-scroll:not(.is-in) [data-reveal-child],
+.reveal-scroll.is-in [data-reveal-child]:not(.is-in) {
+  opacity: 0;
+  transform: translate3d(0, calc(var(--reveal-shift) * 0.6), 0);
+  filter: blur(5px);
 }
 
 /* ---------- no-WebGL fallback ---------- */
@@ -1720,10 +1756,12 @@ body.no-webgl .stage {
     scroll-behavior: auto;
   }
   .reveal,
-  .reveal-scroll {
+  .reveal-scroll,
+  [data-reveal-child] {
     animation: none;
     opacity: 1;
     transform: none;
+    filter: none;
     transition: none;
   }
   .telemetry .dot,
