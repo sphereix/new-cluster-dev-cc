@@ -1404,7 +1404,10 @@ function createCluster(canvas) {
                                    and monitoring until the services section
        Enterprise services      -> cube, drawn into its slot beside the
                                    heading so it scrolls with the section
-       Connectivity             -> mist, held until resilience */
+       Connectivity             -> mist, held until resilience
+     Between one block of content and the next the whole stage hides: a gap
+     after a heading's section bottom is plain black, and the animation eases
+     back in as the next section arrives. */
   const familyHead = document.querySelector('#what .section-head')
   const whatHead = document.querySelector('#what .family-follow')
   const svcHead = document.querySelector('#services .section-head')
@@ -1421,6 +1424,13 @@ function createCluster(canvas) {
   let glowShown = ''
   let veilShown = ''
   let lastSlotEl = null
+  let headCache = null
+  /* every section heading that anchors a block of content — the gaps we watch
+     are the space each of these leaves behind it */
+  function headEls() {
+    if (!headCache) headCache = Array.prototype.slice.call(document.querySelectorAll('main .section-head'))
+    return headCache
+  }
   const NO_SCENE = { t: 0, dark: 0, phase: MARK_PHASE, progress: 0, slot: null }
 
   function scrollScene() {
@@ -1438,8 +1448,28 @@ function createCluster(canvas) {
     const intoSvc = smoothstep(vh * 1.0, vh * 0.55, svcTop)
 
     const cubeA = smoothstep(vh * 1.0, vh * 0.55, famTop) * (1 - intoWhat)
-    const dark = 0
-    const mist = intoWhat * (1 - intoSvc)
+
+    /* The animation belongs to the hero. Between one block of content and the
+       next the stage hides, leaving plain black space, then eases back in as
+       the following section arrives — the reference clip's rhythm. `intoWhat`
+       only turns on once the "What ClusterCloud does" heading is already near
+       the top, so it cannot cover the gap after the hero. Measure the gap
+       after every section that owns a `section-head`. */
+    let between = 0
+    const heads = headEls()
+    for (let i = 0; i < heads.length; i++) {
+      const head = heads[i]
+      const box = head.getBoundingClientRect()
+      if (box.bottom > vh) continue
+      const owner = head.closest('section') || head
+      const tail = owner.getBoundingClientRect().bottom
+      if (tail > vh * 0.86) continue
+      const span = Math.max(1, vh * 0.76 - vh * 0.14)
+      const inGap = 1 - smoothstep(vh * 0.14, vh * 0.14 + span, tail)
+      if (inGap > between) between = inGap
+    }
+    const dark = between
+    const mist = intoWhat * (1 - intoSvc) * (1 - between)
     const connTop = connEl.getBoundingClientRect().top
     const intoConn = 1 - smoothstep(vh * 0.5, vh * 0.85, connTop)
     const intoRes = 1 - smoothstep(vh * 0.5, vh * 0.85, resEl.getBoundingClientRect().top)
@@ -1540,7 +1570,8 @@ function createCluster(canvas) {
     state.pin = damp(state.pin == null ? scene.progress : state.pin, scene.progress, 2.4, dt)
     state.vis = damp(state.vis, 1 - scene.dark, 2.6, dt)
     const glow = state.vis.toFixed(3)
-    const veil = (0.3 + 0.7 * state.vis).toFixed(3)
+    /* the veil tops out at 1 — a gap should be solid black, not grey */
+    const veil = Math.min(1, 0.3 + 0.7 * (1 - state.vis * state.vis)).toFixed(3)
     if (glow !== glowShown || veil !== veilShown) {
       rootStyle.setProperty('--glow', glow)
       rootStyle.setProperty('--veil', veil)
@@ -1726,11 +1757,14 @@ function createCluster(canvas) {
       gl.drawArrays(gl.POINTS, 0, b.count)
     }
 
-    const calm = (1 - state.lock) * (0.25 + 0.75 * state.vis)
+    /* ambient clouds fade out entirely in the gaps between sections, so those
+       stretches read as plain black rather than a faintly glowing haze */
+    const ambient = state.vis
+    const calm = (1 - state.lock) * (0.25 + 0.75 * ambient * ambient)
     drawPoints('stars', hex('#f6e3d2'), 0.28 * calm, 0.55, 0, t * 0.25)
     drawPoints('dust', hex('#f08a3c'), 0.1 * calm, 0.55, 1, t * 0.8)
     // client / device endpoints, opening up in the services section
-    drawPoints('edge', hex('#fdba74'), 0.7 * calm * state.vis, 0.55, 0, t, state.edgeScale)
+    drawPoints('edge', hex('#fdba74'), 0.7 * calm * ambient, 0.55, 0, t, state.edgeScale)
 
     /* ================= morphing particle volume ================= */
     gl.disable(gl.DEPTH_TEST)
